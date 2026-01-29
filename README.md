@@ -6,7 +6,7 @@
 
 - **Node.js + Koa** — backend API
 - **PostgreSQL** — database (through Docker)
-- **TypeORM + Zod** — ORM and validation
+- **SQL + Zod** — DB and validation
 
 ---
 
