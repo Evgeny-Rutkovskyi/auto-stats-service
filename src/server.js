@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
-import { AppDataSource } from "./db/database.js";
+import { runMigrations } from "./db/run-migrations.js";
 
 async function start() {
-  await AppDataSource.initialize(); 
+  await runMigrations(); 
 
   const app = createApp();
   const port = Number(process.env.PORT || 3000);

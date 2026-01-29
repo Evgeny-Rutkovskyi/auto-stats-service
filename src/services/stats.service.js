@@ -1,15 +1,20 @@
-import { AppDataSource } from "../db/database.js";
-import { ListingStat } from "../entities/stats.entity.js";
 import { MetricEvent } from "../enums/metric-event.enum.js";
+import { query } from "../db/database.js";
 
 export class StatsService {
-  constructor() {
-    this.repo = AppDataSource.getRepository(ListingStat);
-  }
+  constructor() {}
 
   async getStats(autoId) {
-    const row = await this.repo.findOne({ where: { autoId } });
+    const { rows } = await query(
+      `SELECT "autoId", "listingViews", "phoneViews"
+       FROM listing_stats
+       WHERE "autoId" = $1`,
+      [autoId]
+    );
+    
+    const row = rows[0];
     if(!row) return {message: "This car don't have any statistic"};
+
     return {
       autoId,
       listingViews: row.listingViews,
@@ -22,34 +27,20 @@ export class StatsService {
     const incPhone = events.includes(MetricEvent.PHONE_VIEW) ? 1 : 0;
 
     if (!incListing && !incPhone) {
-      return { ok: true };
+      return {error: "Any correct events was not found"};
     }
 
-    await AppDataSource.transaction(async (manager) => {
-      const repo = manager.getRepository(ListingStat);
-      const updateRes = await repo
-        .createQueryBuilder()
-        .update(ListingStat)
-        .set({
-          listingViews: () => `"listingViews" + ${incListing}`,
-          phoneViews: () => `"phoneViews" + ${incPhone}`,
-          updatedAt: () => "NOW()",
-        })
-        .where(`"autoId" = :autoId`, { autoId })
-        .execute();
-
-      if ((updateRes.affected || 0) > 0) return;
-
-      try {
-        await repo.insert({
-          autoId,
-          listingViews: incListing,
-          phoneViews: incPhone,
-        });
-      } catch (err) {
-        throw err;
-      }
-    });
+    await query(
+      `
+      INSERT INTO listing_stats ("autoId", "listingViews", "phoneViews")
+      VALUES ($1, $2, $3)
+      ON CONFLICT ("autoId")
+      DO UPDATE SET
+        "listingViews" = listing_stats."listingViews" + EXCLUDED."listingViews",
+        "phoneViews" = listing_stats."phoneViews"   + EXCLUDED."phoneViews"
+      `,
+      [autoId, incListing, incPhone]
+    );
 
     return { ok: true };
   }

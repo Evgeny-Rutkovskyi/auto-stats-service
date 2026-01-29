@@ -41,10 +41,10 @@ router.post("/metrics", async (ctx) => {
         return;
     }
 
-    await statsService.addMetric(autoId, events);
+    const res = await statsService.addMetric(autoId, events);
 
     ctx.status = 200;
-    ctx.body = { ok: true };
+    ctx.body = res;
   } catch (err) {
     console.error(err);
     ctx.status = 500;

@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS listing_stats (
+  "autoId"        INTEGER PRIMARY KEY,
+  "listingViews"  INTEGER NOT NULL DEFAULT 0,
+  "phoneViews"    INTEGER NOT NULL DEFAULT 0,
+  "createdAt"     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "updatedAt"     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

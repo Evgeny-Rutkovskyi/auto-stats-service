@@ -1,23 +1,21 @@
-import "reflect-metadata";
-import path from "path";
-import { fileURLToPath } from "url";
-import { DataSource } from "typeorm";
+import pg from "pg";
 import { config } from "../config/config.js";
-import { ListingStat } from "../entities/stats.entity.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { Pool } = pg;
 
-export const AppDataSource = new DataSource({
-  type: "postgres",
+export const pool = new Pool({
   host: config.POSTGRES_HOST,
   port: Number(config.POSTGRES_PORT),
-  username: config.POSTGRES_USER,
+  user: config.POSTGRES_USER,
   password: config.POSTGRES_PASSWORD,
   database: config.POSTGRES_DB,
-  synchronize: false,
-  logging: false,
-  entities: [ListingStat],
-  migrationsRun: true,
-  migrations: [path.join(__dirname, "migrations", "*.cjs")],
+});
+
+export async function query(text, params) {
+  const res = await pool.query(text, params);
+  return res;
+}
+
+pool.on("error", (err) => {
+  console.error("Unexpected PG pool error:", err);
 });
